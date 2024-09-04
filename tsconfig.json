@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2022",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@config": ["./config"],
+      "@guards": ["./guards"],
+      "@decorator": ["./common/decorators"],
+      "@type": ["./types"],
+      "@prisma": ["./prisma"],
+      "@module": ["./module"]
+    },
+    "allowJs": true,
+    "declaration": true,
+    "baseUrl": "src",
+    "rootDir": "src",
+    "outDir": "dist",
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

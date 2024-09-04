@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  pending   @map("pending")
+  shipped   @map("shipped")
+  cancelled @map("cancelled")
+
+  @@map("status")
+}
+
+model User {
+  id        String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  firstname String    @db.VarChar(64)
+  lastname  String    @db.VarChar(64)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  isAdmin   Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  Favourite Favourite[]
+  Cart      Cart[]
+  Order     Order[]
+
+  @@id([id])
+  @@map("users")
+}
+
+model Book {
+  id          String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  title       String    @db.VarChar(255)
+  description String    @db.Text()
+  isbn        String    @unique @db.VarChar(17) // Adjust if you need to include hyphens or longer ISBN formats
+  photo       String    @db.VarChar(500) // Increase limit if necessary
+  file        String    @db.VarChar(500) // Increase limit if necessary
+  author      String    @db.VarChar(255)
+  categoryId  String    @db.Uuid()
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp
+
+  Category  Category    @relation(fields: [categoryId], references: [id])
+  Favourite Favourite[]
+  Cart      Cart[]
+  Order     Order[]
+
+  @@id([id])
+  @@index([title, isbn, categoryId])
+  @@map("books")
+}
+
+model Category {
+  id        String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  name      String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  books Book[]
+
+  @@id([id])
+  @@index([name])
+  @@map("categories")
+}
+
+model Favourite {
+  id        String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  bookId    String    @db.Uuid()
+  userId    String    @db.Uuid()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  Book Book @relation(fields: [bookId], references: [id])
+  User User @relation(fields: [userId], references: [id])
+
+  @@id([id])
+  @@map("favourites")
+}
+
+model Cart {
+  id        String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  bookId    String    @db.Uuid()
+  userId    String    @db.Uuid()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  Book Book @relation(fields: [bookId], references: [id])
+  User User @relation(fields: [userId], references: [id])
+
+  @@id([id])
+  @@map("carts")
+}
+
+model Order {
+  id        String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  bookId    String    @db.Uuid()
+  userId    String    @db.Uuid()
+  quantity  Int       @default(1)
+  status    Status    @default(pending)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  Book Book @relation(fields: [bookId], references: [id])
+  User User @relation(fields: [userId], references: [id])
+
+  @@id([id])
+  @@map("orders")
+}
+
+model Otp {
+  id        String    @default(dbgenerated("GEN_RANDOM_UUID()")) @db.Uuid()
+  email     String    @unique @db.VarChar(255)
+  otp       String    @db.VarChar(255)
+  firstname String    @db.VarChar(64)
+  lastname  String    @db.VarChar(64)
+  password  String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp
+
+  @@id([id])
+  @@map("otps")
+}
