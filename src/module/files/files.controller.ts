@@ -1,42 +1,64 @@
 import {
   Controller,
-  Get,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { FilesService } from './files.service';
-import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 
-@Controller('files')
-export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+import { FileService } from './files.service';
+import { appConfig } from '@config';
 
+@ApiBearerAuth()
+@ApiTags('File')
+@Controller({ version: '1', path: 'file' })
+export class FileController {
+  constructor(private readonly fileService: FileService) {}
+
+  @ApiOperation({ summary: 'Upload file for all Servicess' })
   @Post()
-  create(@Body() createFileDto: CreateFileDto) {
-    return this.filesService.create(createFileDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.filesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.filesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFileDto: UpdateFileDto) {
-    return this.filesService.update(+id, updateFileDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.filesService.remove(+id);
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async handler(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 1024 * 1024 * appConfig.filesize,
+          }),
+          new FileTypeValidator({
+            fileType: '.(png|jpg|jpeg|svg|heic|gif|webp|pdf)',
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return await this.fileService.create({
+      fileName: file.originalname,
+      fileType: file.mimetype,
+      body: file.buffer,
+    });
   }
 }

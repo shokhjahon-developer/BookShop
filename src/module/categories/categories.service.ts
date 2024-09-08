@@ -22,6 +22,9 @@ export class CategoriesService {
     const categories = await this.prisma.category.findMany({
       skip: skip,
       take: take,
+      include: {
+        books: true,
+      },
     });
 
     const totalCount = await this.prisma.category.count();
@@ -36,7 +39,10 @@ export class CategoriesService {
   }
 
   async findOne(id: string) {
-    const category = await this.prisma.category.findFirst({ where: { id } });
+    const category = await this.prisma.category.findFirst({
+      where: { id },
+      include: { books: true },
+    });
     if (!category) {
       throw new NotFoundException('Category not found');
     }

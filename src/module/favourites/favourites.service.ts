@@ -11,7 +11,7 @@ export class FavouritesService {
     const newFavourite = await this.prisma.favourite.create({
       data: {
         bookId: payload.bookId,
-        userId: currentUser.id, // Use the current user's ID
+        userId: currentUser.id,
       },
     });
 
@@ -29,6 +29,9 @@ export class FavouritesService {
       where: { userId: currentUser.id }, // Filter by current user's ID
       skip,
       take,
+      include: {
+        Book: true,
+      },
     });
 
     const totalCount = await this.prisma.favourite.count({
@@ -46,7 +49,10 @@ export class FavouritesService {
 
   async findOne(id: string, currentUser: ICurrentUser) {
     const favourite = await this.prisma.favourite.findFirst({
-      where: { id, userId: currentUser.id }, // Filter by current user's ID
+      where: { id, userId: currentUser.id },
+      include: {
+        Book: true,
+      },
     });
     if (!favourite) {
       throw new NotFoundException('Favourite not found');

@@ -3,6 +3,7 @@ import {
   CartModule,
   CategoriesModule,
   FavouritesModule,
+  FileModule,
   OrdersModule,
   UsersModule,
 } from '@module';
@@ -23,6 +24,7 @@ import { AuthModule } from 'module/auth/auth.module';
     CategoriesModule,
     FavouritesModule,
     OrdersModule,
+    FileModule,
   ],
   controllers: [],
   providers: [],

@@ -6,10 +6,14 @@ import {
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { PrismaService } from '@prisma';
+import { FileService } from '../files/files.service';
 
 @Injectable()
 export class BooksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fileService: FileService,
+  ) {}
 
   async create(payload: CreateBookDto) {
     const categoryExists = await this.prisma.category.findUnique({
@@ -21,13 +25,35 @@ export class BooksService {
         'Invalid categoryId: Category does not exist',
       );
     }
+
+    let photoUrl: string | undefined;
+    let fileUrl: string | undefined;
+
+    if (payload.photo) {
+      const photoResult = await this.fileService.create({
+        body: payload.photo.buffer,
+        fileName: payload.photo.originalname,
+        fileType: payload.photo.mimetype,
+      });
+      photoUrl = photoResult.data;
+    }
+
+    if (payload.file) {
+      const fileResult = await this.fileService.create({
+        body: payload.file.buffer,
+        fileName: payload.file.originalname,
+        fileType: payload.file.mimetype,
+      });
+      fileUrl = fileResult.data;
+    }
+
     const newBook = await this.prisma.book.create({
       data: {
         title: payload.title,
         description: payload.description,
         isbn: payload.isbn,
-        photo: payload.photo,
-        file: payload.file,
+        photo: photoUrl,
+        file: fileUrl,
         author: payload.author,
         categoryId: payload.categoryId,
       },
@@ -66,14 +92,36 @@ export class BooksService {
 
   async update(id: string, payload: UpdateBookDto) {
     await this.findOne(id);
+
+    let photoUrl: string | undefined;
+    let fileUrl: string | undefined;
+
+    if (payload.photo) {
+      const photoResult = await this.fileService.create({
+        body: payload.photo.buffer,
+        fileName: payload.photo.originalname,
+        fileType: payload.photo.mimetype,
+      });
+      photoUrl = photoResult.data;
+    }
+
+    if (payload.file) {
+      const fileResult = await this.fileService.create({
+        body: payload.file.buffer,
+        fileName: payload.file.originalname,
+        fileType: payload.file.mimetype,
+      });
+      fileUrl = fileResult.data;
+    }
+
     const updatedBook = await this.prisma.book.update({
       where: { id },
       data: {
         title: payload.title,
         description: payload.description,
         isbn: payload.isbn,
-        photo: payload.photo,
-        file: payload.file,
+        photo: photoUrl,
+        file: fileUrl,
         author: payload.author,
         categoryId: payload.categoryId,
       },

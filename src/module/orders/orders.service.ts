@@ -35,6 +35,9 @@ export class OrdersService {
       where: { userId: currentUser.id }, // Filter by current user's ID
       skip,
       take,
+      include: {
+        Book: true,
+      },
     });
 
     const totalCount = await this.prisma.order.count({

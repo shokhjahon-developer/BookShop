@@ -7,27 +7,44 @@ import { appConfig } from '@config';
 
 async function bootstrap() {
   const app = await NestFactory.create<INestApplication>(AppModule);
+
+  // Global pipes configuration
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
     }),
   );
-  app.setGlobalPrefix('api');
-  app.enableCors();
 
+  // API prefix and CORS configuration
+  app.setGlobalPrefix('api');
+  app.enableCors({
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true,
+  });
+
+  // Swagger documentation setup with basic auth
+  setupSwagger(app);
+
+  // Start the application
+  await app.listen(appConfig.port);
+
+  // Log application details
+  logApplicationDetails();
+}
+
+function setupSwagger(app: INestApplication) {
   app.use(
     '/api/docs',
     basicAuth({
-      users: {
-        [appConfig.adminUser]: appConfig.adminPassword,
-      },
+      users: { [appConfig.adminUser]: appConfig.adminPassword },
       challenge: true,
     }),
   );
 
   const options = new DocumentBuilder()
-    .setTitle('BookShop')
-    .setDescription('API for BookShop application.')
+    .setTitle('BookShop API')
+    .setDescription('Comprehensive API for BookShop application')
+    .setVersion('1.0')
     .addBearerAuth()
     .build();
 
@@ -37,14 +54,15 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
-
-  await app.listen(appConfig.port, () => {
-    console.log(
-      `Application is running on: http://${appConfig.host}:${appConfig.port}`,
-    );
-    console.log(
-      `Swagger route: http://${appConfig.host}:${appConfig.port}/api/docs`,
-    );
-  });
 }
-bootstrap();
+
+function logApplicationDetails() {
+  const { host, port } = appConfig;
+  console.log(`Application is running on: http://${host}:${port}`);
+  console.log(`Swagger documentation: http://${host}:${port}/api/docs`);
+}
+
+bootstrap().catch((error) => {
+  console.error('Application failed to start:', error);
+  process.exit(1);
+});

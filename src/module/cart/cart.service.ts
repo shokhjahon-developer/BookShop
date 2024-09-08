@@ -11,7 +11,7 @@ export class CartsService {
     const newCart = await this.prisma.cart.create({
       data: {
         bookId: payload.bookId,
-        userId: currentUser.id, // Use the current user's ID
+        userId: currentUser.id,
       },
     });
 
@@ -26,9 +26,12 @@ export class CartsService {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
     const carts = await this.prisma.cart.findMany({
-      where: { userId: currentUser.id }, // Filter by current user's ID
+      where: { userId: currentUser.id },
       skip,
       take,
+      include: {
+        Book: true,
+      },
     });
 
     const totalCount = await this.prisma.cart.count({
@@ -46,7 +49,10 @@ export class CartsService {
 
   async findOne(id: string, currentUser: ICurrentUser) {
     const cart = await this.prisma.cart.findFirst({
-      where: { id, userId: currentUser.id }, // Filter by current user's ID
+      where: { id, userId: currentUser.id },
+      include: {
+        Book: true,
+      },
     });
     if (!cart) {
       throw new NotFoundException('Cart not found');
