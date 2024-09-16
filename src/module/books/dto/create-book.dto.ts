@@ -1,4 +1,3 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { IsUUID, IsString, IsOptional } from 'class-validator';
 
 export class CreateBookDto {
